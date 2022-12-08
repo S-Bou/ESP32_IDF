@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "driver/i2c.h"
+#include "i2c-lcd.h"
 
 static const char *TAG = "i2c-simple-example";
 
@@ -47,7 +48,16 @@ static esp_err_t i2c_master_init(void)
 
 void app_main(void)
 {
-    uint8_t data[2];
+
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
+
+    lcd_init();
+
+    lcd_put_cur(0, 0);
+    lcd_send_string("Hello world!");
+
+    lcd_put_cur(1, 0);
+    lcd_send_string("From ESP32 Wroom");
+
 }
