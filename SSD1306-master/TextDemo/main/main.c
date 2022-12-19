@@ -23,6 +23,8 @@
 
 	SSD1306_t dev;
 
+float tempe = 12.34;
+
 void Config_SSD1306(void){
 
 #if CONFIG_I2C_INTERFACE
@@ -48,31 +50,32 @@ void Config_SSD1306(void){
     ssd1306_display_text_x3(&dev, 3, "Hello", 5, false);
 
     vTaskDelay(3000 / portTICK_PERIOD_MS);
+    ssd1306_clear_screen(&dev, false);
 }
 
 void app_main(void)
 {
 	Config_SSD1306();
 
-	ssd1306_display_text(&dev, 0, "SSD1306 128x64", 14, false);
-	ssd1306_display_text(&dev, 1, "ABCDEFGHIJKLMNOP", 16, false);
-	ssd1306_display_text(&dev, 2, "abcdefghijklmnop",16, false);
-	ssd1306_display_text(&dev, 3, "Hello World!!", 13, false);
-	//ssd1306_clear_line(&dev, 4, true);
-	//ssd1306_clear_line(&dev, 5, true);
-	//ssd1306_clear_line(&dev, 6, true);
-	//ssd1306_clear_line(&dev, 7, true);
-	ssd1306_display_text(&dev, 4, "SSD1306 128x64", 14, true);
-	ssd1306_display_text(&dev, 5, "ABCDEFGHIJKLMNOP", 16, true);
-	ssd1306_display_text(&dev, 6, "abcdefghijklmnop",16, true);
-	ssd1306_display_text(&dev, 7, "Hello World!!", 13, true);
+	ssd1306_display_text(&dev, 0, "                 ", 17, true);
+	ssd1306_display_text(&dev, 1, "     CECOTEC     ", 17, true);
+	ssd1306_display_text(&dev, 2, "                 ", 17, true);
+	ssd1306_display_text(&dev, 3, "                 ", 17, true);
+	
+	char buffer[20];
+    snprintf(buffer, sizeof buffer, "  Temp: %.2f", tempe);
+	ssd1306_display_text(&dev, 4, buffer, sizeof buffer, true);
+
+	ssd1306_display_text(&dev, 5, "                 ", 17, true);
+	ssd1306_display_text(&dev, 6, "                 ", 17, true);
+	ssd1306_display_text(&dev, 7, "                 ", 17, true);
 
 	vTaskDelay(3000 / portTICK_PERIOD_MS);
 	
 	// Fade Out
-	ssd1306_fadeout(&dev);
+	//ssd1306_fadeout(&dev);
 
-	esp_restart(); // Restart module
+	//esp_restart(); // Restart module
 	
 }
 
