@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/CMakeFiles/bootloader
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/CMakeFiles/bootloader.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/CMakeFiles/bootloader-complete.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/sergiobou/esp/ESP32_IDF/OledTemp/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
