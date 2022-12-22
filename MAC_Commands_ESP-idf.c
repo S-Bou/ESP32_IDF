@@ -34,6 +34,6 @@ You must replace <your port> with the value of the serial port to the ESP32 devi
 	
 ls /dev/cu.*
 
-idf.py -p /dev/cu.usbserial-0001 flash monitor
+idf.py -p /dev/cu.usbserial-0001 build flash monitor
 
 

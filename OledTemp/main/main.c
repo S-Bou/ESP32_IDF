@@ -36,7 +36,7 @@
 
 static uint32_t reading;
 
-static const char *TAG = "ADC SINGLE";
+static const char *TAG = "ADC single ";
 
 static esp_adc_cal_characteristics_t adc1_chars;
 
@@ -57,16 +57,15 @@ void TakeTemperature(uint32_t voltsIN)
 {
     //Bloque de cálculo
     //vm=(vcc / 1024)*( voltsIN );                    //Calcular tensión en la entrada
-    vm = voltsIN;                                     //Calcular tensión en la entrada
+    vm = voltsIN/1000;                                //Calcular tensión en la entrada
     rntc = rAux / ((vcc/vm)-1);                       //Calcular la resistencia de la NTC
-    ESP_LOGI("Termistor value", "Ohms: %.2f Ohms", rntc);
+    ESP_LOGI("Termistor  ", "%.2f Ohms", rntc);
 
     temperaturaK = beta/(log(rntc/r0)+(beta/temp0));  //Calcular la temperatura en Kelvin
-    ESP_LOGI("Temperatura", "Kelvins: %.2f °K", temperaturaK);
 
     //Restar 273 para pasar a grados celsus
     tempeCelsius = temperaturaK - 273;
-    ESP_LOGI("Temperatura", "Grados: %.2f °C", tempeCelsius);
+    ESP_LOGI("Temperatura", "%.2f °C", tempeCelsius);
 }
 
 static bool adc_calibration_init(void)
@@ -113,7 +112,7 @@ void Config_SSD1306(void){
     	ssd1306_contrast(&dev, 0xff);
         ssd1306_display_text_x3(&dev, 3, "Hello", 5, false);
 
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
 
         // Fade Out
         ssd1306_fadeout(&dev);
@@ -122,7 +121,6 @@ void Config_SSD1306(void){
 
 void app_main(void)
 {
-
 	Config_SSD1306();
 
     uint32_t voltage = 0;
@@ -133,15 +131,14 @@ void app_main(void)
     ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_EXAMPLE_CHAN0, ADC_EXAMPLE_ATTEN));
 
     while (1) {
+        ESP_LOGW("", "---------------------------------------------------");
         reading = adc1_get_raw(ADC1_EXAMPLE_CHAN0);
         //ESP_LOGI(TAG, "raw  data: %d", reading);
         if (cali_enable) {
             voltage = esp_adc_cal_raw_to_voltage(reading, &adc1_chars);
-            ESP_LOGI(TAG, "cali data: %d mV", voltage);
+            ESP_LOGI(TAG, "%d mV", voltage);
 
             TakeTemperature(voltage);
-
-            ESP_LOGI("Temperatura", "Grados: %.2f °C", tempeCelsius);
 
             ssd1306_display_text(&dev, 0, "                 ", 17, true);
 			ssd1306_display_text(&dev, 1, "     CECOTEC     ", 17, true);
