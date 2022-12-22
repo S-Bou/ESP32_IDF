@@ -40,11 +40,34 @@ static const char *TAG = "ADC SINGLE";
 
 static esp_adc_cal_characteristics_t adc1_chars;
 
-//Resistencia fija del divisor de tensión
-float R1 = 100000;               
-float logR2, R2, TEMPERATURA;
-//Coeficientes de S-H
-float c1 = 2.114990448e-03, c2 = 0.3832381228e-04, c3 = 5.228061052e-07;
+//Valores fijos del circuito
+float rAux = 100000.0;
+float vcc = 5.0;
+float beta = 4190.0;
+float temp0 = 298.0;
+float r0 = 100000.0;
+
+//Variables usadas en el cálculo
+float vm = 0.0;
+float rntc = 0.0;
+float temperaturaK = 0.0;
+float tempeCelsius = 0.0;
+
+void TakeTemperature(uint32_t voltsIN)
+{
+    //Bloque de cálculo
+    //vm=(vcc / 1024)*( voltsIN );                    //Calcular tensión en la entrada
+    vm = voltsIN;                                     //Calcular tensión en la entrada
+    rntc = rAux / ((vcc/vm)-1);                       //Calcular la resistencia de la NTC
+    ESP_LOGI("Termistor value", "Ohms: %.2f Ohms", rntc);
+
+    temperaturaK = beta/(log(rntc/r0)+(beta/temp0));  //Calcular la temperatura en Kelvin
+    ESP_LOGI("Temperatura", "Kelvins: %.2f °K", temperaturaK);
+
+    //Restar 273 para pasar a grados celsus
+    tempeCelsius = temperaturaK - 273;
+    ESP_LOGI("Temperatura", "Grados: %.2f °C", tempeCelsius);
+}
 
 static bool adc_calibration_init(void)
 {
@@ -68,30 +91,33 @@ static bool adc_calibration_init(void)
 
 void Config_SSD1306(void){
 
-#if CONFIG_I2C_INTERFACE
-	ESP_LOGI(tag, "INTERFACE is i2c");
-	ESP_LOGI(tag, "CONFIG_SDA_GPIO=%d",CONFIG_SDA_GPIO);
-	ESP_LOGI(tag, "CONFIG_SCL_GPIO=%d",CONFIG_SCL_GPIO);
-	ESP_LOGI(tag, "CONFIG_RESET_GPIO=%d",CONFIG_RESET_GPIO);
-	i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
-#endif // CONFIG_I2C_INTERFACE
+    #if CONFIG_I2C_INTERFACE
+    	ESP_LOGI(tag, "INTERFACE is i2c");
+    	ESP_LOGI(tag, "CONFIG_SDA_GPIO=%d",CONFIG_SDA_GPIO);
+    	ESP_LOGI(tag, "CONFIG_SCL_GPIO=%d",CONFIG_SCL_GPIO);
+    	ESP_LOGI(tag, "CONFIG_RESET_GPIO=%d",CONFIG_RESET_GPIO);
+    	i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
+    #endif // CONFIG_I2C_INTERFACE
 
-#if CONFIG_FLIP
-	dev._flip = true;
-	ESP_LOGW(tag, "Flip upside down");
-#endif
+    #if CONFIG_FLIP
+    	dev._flip = true;
+    	ESP_LOGW(tag, "Flip upside down");
+    #endif
 
-#if CONFIG_SSD1306_128x64
-	ESP_LOGI(tag, "Panel is 128x64");
-	ssd1306_init(&dev, 128, 64);
-#endif // CONFIG_SSD1306_128x64
+    #if CONFIG_SSD1306_128x64
+    	ESP_LOGI(tag, "Panel is 128x64");
+    	ssd1306_init(&dev, 128, 64);
+    #endif // CONFIG_SSD1306_128x64
 
-	ssd1306_clear_screen(&dev, false);
-	ssd1306_contrast(&dev, 0xff);
-    ssd1306_display_text_x3(&dev, 3, "Hello", 5, false);
+    	ssd1306_clear_screen(&dev, false);
+    	ssd1306_contrast(&dev, 0xff);
+        ssd1306_display_text_x3(&dev, 3, "Hello", 5, false);
 
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-    ssd1306_clear_screen(&dev, false);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+        // Fade Out
+        ssd1306_fadeout(&dev);
+        //ssd1306_clear_screen(&dev, false);
 }
 
 void app_main(void)
@@ -112,24 +138,21 @@ void app_main(void)
         if (cali_enable) {
             voltage = esp_adc_cal_raw_to_voltage(reading, &adc1_chars);
             ESP_LOGI(TAG, "cali data: %d mV", voltage);
-            //Conversion de tensión a resistencia
-            R2 = R1 * (4000.0 / (float)voltage - 1.0); 
-            logR2 = log(R2);            // logaritmo de R2 necesario para ecuación
-            TEMPERATURA = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));     // ecuación S-H
-            TEMPERATURA = TEMPERATURA - 273.15;   // Kelvin a Centigrados (Celsius)
 
-            ESP_LOGI("Temperatura", "Grados: %.2f ºC", TEMPERATURA);
+            TakeTemperature(voltage);
+
+            ESP_LOGI("Temperatura", "Grados: %.2f °C", tempeCelsius);
 
             ssd1306_display_text(&dev, 0, "                 ", 17, true);
 			ssd1306_display_text(&dev, 1, "     CECOTEC     ", 17, true);
-			ssd1306_display_text(&dev, 2, "                 ", 17, true);
-			ssd1306_display_text(&dev, 3, "                 ", 17, true);
-			
-			char buffer[20];
-		    snprintf(buffer, sizeof buffer, "  Temp: %.2f", TEMPERATURA);
-			ssd1306_display_text(&dev, 4, buffer, sizeof buffer, true);
+            ssd1306_display_text(&dev, 2, "                 ", 17, true);
+			ssd1306_display_text(&dev, 3, "Temperatura:     ", 17, true);
+            ssd1306_display_text(&dev, 4, "                 ", 17, true);
 
-			ssd1306_display_text(&dev, 5, "                 ", 17, true);
+			char buffer[20];
+		    snprintf(buffer, sizeof buffer, "     %.2f", tempeCelsius);
+
+			ssd1306_display_text(&dev, 5, buffer, sizeof buffer, true);
 			ssd1306_display_text(&dev, 6, "                 ", 17, true);
 			ssd1306_display_text(&dev, 7, "                 ", 17, true);
 
